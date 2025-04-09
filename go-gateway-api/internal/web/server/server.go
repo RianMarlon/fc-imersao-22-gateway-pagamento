@@ -23,7 +23,7 @@ func NewServer(accountService *service.AccountService, port string) *Server {
 	}
 }
 
-func (s *Server) ConfigureRoutes() error {
+func (s *Server) ConfigureRoutes() {
 	accountHandler := handlers.NewAccountHandler(s.accountService)
 
 	s.router.Post("/accounts", accountHandler.Create)
