@@ -7,7 +7,7 @@ import (
 	"github.com/RianMarlon/fc-imersao-22-gateway-pagamento/internal/domain"
 	"github.com/RianMarlon/fc-imersao-22-gateway-pagamento/internal/dto"
 	"github.com/RianMarlon/fc-imersao-22-gateway-pagamento/internal/service"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 type InvoiceHandler struct {
