@@ -14,10 +14,30 @@ datasource db {
 }
 
 model Account {
-  id           String   @id
-  isSuspicious Boolean  @default(false) @map("is_suspicious")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           String    @id
+  isSuspicious Boolean   @default(false) @map("is_suspicious")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  invoices     Invoice[]
 
   @@map("accounts")
+}
+
+model Invoice {
+  id        String        @id
+  amount    Int
+  status    InvoiceStatus
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  accountId String        @map("account_id")
+  account   Account       @relation(fields: [accountId], references: [id])
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  APPROVED
+  REJECTED
+
+  @@map("invoice_status")
 }
