@@ -1,8 +1,6 @@
 import Link from "next/link"
 import { PageContainer } from "@/components/page-container"
 import { Card } from "@/components/card"
-import { Input } from "@/components/input"
-import { Select } from "@/components/select"
 import { Button } from "@/components/button"
 import { StatusBadge } from "@/components/status-badge"
 import { Eye, Download, Plus } from "lucide-react"
@@ -33,25 +31,6 @@ export default async function InvoiceListPage() {
           <Link href="/invoices/create">
             <Button icon={<Plus size={16} />}>Nova Fatura</Button>
           </Link>
-        </div>
-
-        {/* Filtros */}
-        <div className="bg-slate-700 rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Select
-            label="Status"
-            options={[
-              { value: "all", label: "Todos" },
-              { value: "approved", label: "Aprovado" },
-              { value: "pending", label: "Pendente" },
-              { value: "rejected", label: "Rejeitado" },
-            ]}
-          />
-
-          <Input type="text" label="Data Inicial" placeholder="dd/mm/aaaa" maxLength={10} />
-
-          <Input type="text" label="Data Final" placeholder="dd/mm/aaaa" maxLength={10} />
-
-          <Input type="text" label="Buscar" placeholder="ID ou descrição" />
         </div>
 
         {/* Tabela de Faturas */}
