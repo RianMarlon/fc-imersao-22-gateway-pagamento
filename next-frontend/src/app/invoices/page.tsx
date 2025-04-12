@@ -6,33 +6,22 @@ import { Select } from "@/components/select"
 import { Button } from "@/components/button"
 import { StatusBadge } from "@/components/status-badge"
 import { Eye, Download, Plus } from "lucide-react"
+import { cookies } from "next/headers";
 
-// Dados mockados para exemplo
-const invoices = [
-  {
-    id: "#INV-001",
-    date: "30/03/2025",
-    description: "Compra Online #123",
-    value: "R$ 1.500,00",
-    status: "approved" as const,
-  },
-  {
-    id: "#INV-002",
-    date: "29/03/2025",
-    description: "Serviço Premium",
-    value: "R$ 15.000,00",
-    status: "pending" as const,
-  },
-  {
-    id: "#INV-003",
-    date: "28/03/2025",
-    description: "Assinatura Mensal",
-    value: "R$ 99,90",
-    status: "rejected" as const,
-  },
-]
+export async function getInvoices() {
+  const cookieStore = await cookies();
+  const apiKey = cookieStore.get("apiKey")?.value;
+  const response = await fetch("http://localhost:8080/invoices", {
+    headers: {
+      "X-API-KEY": apiKey as string,
+    },
+  });
+  return response.json();
+}
 
-export default function InvoiceListPage() {
+export default async function InvoiceListPage() {
+  const invoices = await getInvoices();
+
   return (
     <PageContainer>
       <Card>
@@ -82,9 +71,9 @@ export default function InvoiceListPage() {
               {invoices.map((invoice) => (
                 <tr key={invoice.id} className="border-b border-slate-700">
                   <td className="py-3 px-4">{invoice.id}</td>
-                  <td className="py-3 px-4">{invoice.date}</td>
+                  <td className="py-3 px-4">{new Date(invoice.created_at).toLocaleDateString("pt-BR")}</td>
                   <td className="py-3 px-4">{invoice.description}</td>
-                  <td className="py-3 px-4">{invoice.value}</td>
+                  <td className="py-3 px-4">{Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(invoice.amount)}</td>
                   <td className="py-3 px-4">
                     <StatusBadge status={invoice.status} />
                   </td>
