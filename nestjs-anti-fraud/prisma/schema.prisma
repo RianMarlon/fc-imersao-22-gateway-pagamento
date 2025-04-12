@@ -24,15 +24,28 @@ model Account {
 }
 
 model Invoice {
-  id        String        @id
-  amount    Int
-  status    InvoiceStatus
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
-  accountId String        @map("account_id")
-  account   Account       @relation(fields: [accountId], references: [id])
+  id           String        @id
+  amount       Int
+  status       InvoiceStatus
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  accountId    String        @map("account_id")
+  account      Account       @relation(fields: [accountId], references: [id])
+  fraudHistory FraudHistory?
 
   @@map("invoices")
+}
+
+model FraudHistory {
+  id          String      @id
+  reason      FraudReason
+  description String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  invoiceId   String      @unique @map("invoice_id")
+  invoice     Invoice     @relation(fields: [invoiceId], references: [id])
+
+  @@map("fraud_history")
 }
 
 enum InvoiceStatus {
@@ -40,4 +53,12 @@ enum InvoiceStatus {
   REJECTED
 
   @@map("invoice_status")
+}
+
+enum FraudReason {
+  SUSPICIOUS_ACCOUNT
+  UNUSUAL_PATTERN
+  FREQUENT_HIGH_VALUE
+
+  @@map("fraud_reason")
 }
