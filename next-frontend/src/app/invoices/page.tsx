@@ -13,6 +13,10 @@ export async function getInvoices() {
     headers: {
       "X-API-KEY": apiKey as string,
     },
+    cache: 'force-cache',
+    next: {
+      tags: [`accounts/${apiKey}/invoices`]
+    }
   });
   return response.json();
 }

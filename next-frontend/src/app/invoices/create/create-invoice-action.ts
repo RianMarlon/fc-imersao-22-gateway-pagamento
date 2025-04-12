@@ -1,4 +1,5 @@
 "use server";
+import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -36,6 +37,10 @@ export async function createInvoiceAction(formData: FormData) {
   if (!response.ok) {
     throw new Error("Failed to create invoice");
   }
+
+  const invoice = await response.json();
+  revalidateTag(`accounts/${apiKey}/invoices`);
+  revalidateTag(`accounts/${apiKey}/invoices/${invoice.id}`);
 
   redirect("/invoices");
 }
