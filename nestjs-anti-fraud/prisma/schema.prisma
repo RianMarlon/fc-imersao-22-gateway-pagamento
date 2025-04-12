@@ -37,7 +37,7 @@ model Invoice {
 }
 
 model FraudHistory {
-  id          String      @id
+  id          String      @id @default(uuid())
   reason      FraudReason
   description String?
   createdAt   DateTime    @default(now()) @map("created_at")
