@@ -5,6 +5,8 @@ import { SuspiciousAccountSpecification } from './fraud/specifications/suspiciou
 import { UnusualAmountSpecification } from './fraud/specifications/unusual-amount.specification';
 import { FraudAggregateSpecification } from './fraud/specifications/fraud-aggregate.specification';
 import { PrismaModule } from '../prisma/prisma.module';
+import { InvoicesService } from './invoices.service';
+import { InvoicesController } from './invoices.controller';
 
 @Module({
   imports: [PrismaModule],
@@ -27,7 +29,9 @@ import { PrismaModule } from '../prisma/prisma.module';
         FrequentHighValueSpecification,
       ],
     },
+    InvoicesService,
   ],
   exports: [FraudService],
+  controllers: [InvoicesController],
 })
 export class InvoicesModule {}
