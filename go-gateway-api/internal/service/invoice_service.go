@@ -1,24 +1,33 @@
 package service
 
 import (
+	"context"
+
 	"github.com/RianMarlon/fc-imersao-22-gateway-pagamento/internal/domain"
+	"github.com/RianMarlon/fc-imersao-22-gateway-pagamento/internal/domain/events"
 	"github.com/RianMarlon/fc-imersao-22-gateway-pagamento/internal/dto"
 )
 
 type InvoiceService struct {
 	invoiceRepository domain.InvoiceRepository
-	accountService    *AccountService
+	accountService    AccountService
+	kafkaProducer     KafkaProducerInterface
 }
 
-func NewInvoiceService(invoiceRepository domain.InvoiceRepository, accountService *AccountService) *InvoiceService {
+func NewInvoiceService(
+	invoiceRepository domain.InvoiceRepository,
+	accountService AccountService,
+	kafkaProducer KafkaProducerInterface,
+) *InvoiceService {
 	return &InvoiceService{
 		invoiceRepository: invoiceRepository,
 		accountService:    accountService,
+		kafkaProducer:     kafkaProducer,
 	}
 }
 
-func (s *InvoiceService) ListByAccountAPIKey(apikey string) ([]*dto.InvoiceOutput, error) {
-	accountOutput, err := s.accountService.FindByAPIKey(apikey)
+func (s *InvoiceService) ListByAccountAPIKey(apiKey string) ([]*dto.InvoiceOutput, error) {
+	accountOutput, err := s.accountService.FindByAPIKey(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -36,17 +45,16 @@ func (s *InvoiceService) ListByAccount(accountID string) ([]*dto.InvoiceOutput, 
 	for i, invoice := range invoices {
 		output[i] = dto.FromInvoice(invoice)
 	}
-
 	return output, nil
 }
 
-func (s *InvoiceService) GetByID(id, apikey string) (*dto.InvoiceOutput, error) {
+func (s *InvoiceService) GetByID(id, apiKey string) (*dto.InvoiceOutput, error) {
 	invoice, err := s.invoiceRepository.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	accountOutput, err := s.accountService.FindByAPIKey(apikey)
+	accountOutput, err := s.accountService.FindByAPIKey(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +81,18 @@ func (s *InvoiceService) Create(input *dto.CreateInvoiceInput) (*dto.InvoiceOutp
 		return nil, err
 	}
 
+	if invoice.Status == domain.StatusPending {
+		pendingTransaction := events.NewPendingTransaction(
+			invoice.AccountID,
+			invoice.ID,
+			invoice.Amount,
+		)
+
+		if err := s.kafkaProducer.SendingPendingTransaction(context.Background(), *pendingTransaction); err != nil {
+			return nil, err
+		}
+	}
+
 	if invoice.Status == domain.StatusApproved {
 		_, err = s.accountService.UpdateBalance(input.APIKey, invoice.Amount)
 		if err != nil {
@@ -85,4 +105,32 @@ func (s *InvoiceService) Create(input *dto.CreateInvoiceInput) (*dto.InvoiceOutp
 	}
 
 	return dto.FromInvoice(invoice), nil
+}
+
+func (s *InvoiceService) ProcessTransactionResult(invoiceID string, status domain.Status) error {
+	invoice, err := s.invoiceRepository.FindByID(invoiceID)
+	if err != nil {
+		return err
+	}
+
+	if err := invoice.UpdateStatus(status); err != nil {
+		return err
+	}
+
+	if err := s.invoiceRepository.UpdateStatus(invoice); err != nil {
+		return err
+	}
+
+	if status == domain.StatusApproved {
+		account, err := s.accountService.FindByID(invoice.AccountID)
+		if err != nil {
+			return err
+		}
+
+		if _, err := s.accountService.UpdateBalance(account.APIKey, invoice.Amount); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

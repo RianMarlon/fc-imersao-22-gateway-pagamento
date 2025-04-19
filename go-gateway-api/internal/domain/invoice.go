@@ -73,7 +73,7 @@ func (i *Invoice) Process() error {
 }
 
 func (i *Invoice) UpdateStatus(newStatus Status) error {
-	if i.Status != StatusPending {
+	if i.Status == StatusPending {
 		return ErrInvalidStatus
 	}
 
