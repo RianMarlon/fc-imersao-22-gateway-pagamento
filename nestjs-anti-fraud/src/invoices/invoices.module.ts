@@ -7,7 +7,7 @@ import { FraudAggregateSpecification } from './fraud/specifications/fraud-aggreg
 import { PrismaModule } from '../prisma/prisma.module';
 import { InvoicesService } from './invoices.service';
 import { InvoicesController } from './invoices.controller';
-
+import { InvoicesConsumer } from './invoices.consumer';
 @Module({
   imports: [PrismaModule],
   providers: [
@@ -32,6 +32,6 @@ import { InvoicesController } from './invoices.controller';
     InvoicesService,
   ],
   exports: [FraudService],
-  controllers: [InvoicesController],
+  controllers: [InvoicesController, InvoicesConsumer],
 })
 export class InvoicesModule {}
