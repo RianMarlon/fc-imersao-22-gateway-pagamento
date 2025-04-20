@@ -1,7 +1,8 @@
-FROM golang:1.23.6
+FROM golang:1.23.6-alpine
+
+RUN apk add --no-cache bash
 
 RUN go install github.com/githubnemo/CompileDaemon@latest
-
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 WORKDIR /home/go/app
