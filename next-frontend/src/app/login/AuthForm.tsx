@@ -6,7 +6,7 @@ export async function loginAction(formData: FormData) {
   'use server'
   const apiKey = formData.get("apiKey")
 
-  const response = await fetch('http://go-gateway-api:8080/accounts', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts`, {
     headers: {
       'X-API-KEY': apiKey as string
     }

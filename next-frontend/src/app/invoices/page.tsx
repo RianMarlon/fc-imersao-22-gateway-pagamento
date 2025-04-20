@@ -6,10 +6,18 @@ import { StatusBadge } from "@/components/status-badge"
 import { Eye, Download, Plus } from "lucide-react"
 import { cookies } from "next/headers";
 
-export async function getInvoices() {
+interface Invoice {
+  id: string;
+  created_at: string;
+  description: string;
+  amount: number;
+  status: "approved" | "pending" | "rejected";
+}
+
+export async function getInvoices(): Promise<Invoice[]> {
   const cookieStore = await cookies();
   const apiKey = cookieStore.get("apiKey")?.value;
-  const response = await fetch("http://go-gateway-api:8080/invoices", {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices`, {
     headers: {
       "X-API-KEY": apiKey as string,
     },
@@ -51,7 +59,7 @@ export default async function InvoiceListPage() {
               </tr>
             </thead>
             <tbody>
-              {invoices.map((invoice) => (
+              {invoices.map((invoice: Invoice) => (
                 <tr key={invoice.id} className="border-b border-slate-700">
                   <td className="py-3 px-4">{invoice.id}</td>
                   <td className="py-3 px-4">{new Date(invoice.created_at).toLocaleDateString("pt-BR")}</td>

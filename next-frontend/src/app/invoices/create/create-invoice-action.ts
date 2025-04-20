@@ -16,7 +16,7 @@ export async function createInvoiceAction(formData: FormData) {
   const cvv = formData.get("cvv");
   const cardholderName = formData.get("cardholderName");
 
-  const response = await fetch("http://go-gateway-api:8080/invoices", {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
