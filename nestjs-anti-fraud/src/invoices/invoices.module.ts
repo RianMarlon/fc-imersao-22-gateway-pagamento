@@ -10,6 +10,7 @@ import { InvoicesController } from './invoices.controller';
 import { InvoicesConsumer } from './invoices.consumer';
 import * as kafkaLib from '@confluentinc/kafka-javascript';
 import { PublishProcessedInvoiceListener } from './events/publish-processed-invoice.listener';
+
 @Module({
   imports: [PrismaModule],
   providers: [
@@ -34,7 +35,7 @@ import { PublishProcessedInvoiceListener } from './events/publish-processed-invo
     {
       provide: kafkaLib.KafkaJS.Kafka,
       useValue: new kafkaLib.KafkaJS.Kafka({
-        'bootstrap.servers': 'kafka:29092',
+        'bootstrap.servers': process.env.KAFKA_BROKER,
       }),
     },
     InvoicesService,
