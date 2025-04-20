@@ -1,0 +1,133 @@
+services:
+  next-frontend:
+    build:
+      context: ./next-frontend
+      dockerfile: Dockerfile.local
+    ports:
+      - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./next-frontend:/web/app
+    networks:
+      - gateway_pagamento_network
+
+  nestjs:
+    build:
+      context: ./nestjs-anti-fraud
+      dockerfile: Dockerfile.local
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./nestjs-anti-fraud:/home/node/app
+    env_file:
+      - ./nestjs-anti-fraud/.env
+    depends_on:
+      nestjs-anti-fraud-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - gateway_pagamento_network
+  go-gateway-api:
+    build:
+      context: ./go-gateway-api
+      dockerfile: Dockerfile.local
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./go-gateway-api:/home/go/app
+    env_file:
+      - ./go-gateway-api/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      go-gateway-api-db:
+        condition: service_healthy
+    networks:
+      - gateway_pagamento_network
+
+  go-gateway-api-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gateway_pagamento
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_go_gateway_api:/var/lib/postgresql/data
+    networks:
+      - gateway_pagamento_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  nestjs-anti-fraud-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_nestjs_anti_fraud:/var/lib/postgresql/data
+    networks:
+      - gateway_pagamento_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-server:7.9.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    networks:
+      - gateway_pagamento_network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:29092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  kafka-init:
+    image: confluentinc/cp-server:7.9.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - gateway_pagamento_network
+    command: >
+      bash -c "
+        echo 'Iniciando criação dos tópicos...' &&
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic pending_transactions --partitions 1 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic transaction_results --partitions 1 --replication-factor 1 &&
+        echo 'Tópicos criados com sucesso!'"
+
+volumes:
+  postgres_data_nestjs_anti_fraud:
+  postgres_data_go_gateway_api:
+
+networks:
+  gateway_pagamento_network:
+    driver: bridge
