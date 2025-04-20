@@ -8,6 +8,8 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { InvoicesService } from './invoices.service';
 import { InvoicesController } from './invoices.controller';
 import { InvoicesConsumer } from './invoices.consumer';
+import * as kafkaLib from '@confluentinc/kafka-javascript';
+import { PublishProcessedInvoiceListener } from './events/publish-processed-invoice.listener';
 @Module({
   imports: [PrismaModule],
   providers: [
@@ -29,7 +31,14 @@ import { InvoicesConsumer } from './invoices.consumer';
         FrequentHighValueSpecification,
       ],
     },
+    {
+      provide: kafkaLib.KafkaJS.Kafka,
+      useValue: new kafkaLib.KafkaJS.Kafka({
+        'bootstrap.servers': 'kafka:29092',
+      }),
+    },
     InvoicesService,
+    PublishProcessedInvoiceListener,
   ],
   exports: [FraudService],
   controllers: [InvoicesController, InvoicesConsumer],
