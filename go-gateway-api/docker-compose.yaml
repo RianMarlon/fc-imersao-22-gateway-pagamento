@@ -1,4 +1,20 @@
 services:
+  go-gateway-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/home/go/app
+    depends_on:
+      kafka:
+        condition: service_healthy
+      go-gateway-api-db:
+        condition: service_healthy
+    env_file:
+      - .env
+
   go-gateway-api-db:
     image: postgres:16-alpine
     ports:
@@ -8,7 +24,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: gateway_pagamento
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_go_gateway_api:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -54,4 +70,4 @@ services:
         echo 'Tópicos criados com sucesso!'"
 
 volumes:
-  postgres_data:
+  postgres_data_go_gateway_api:

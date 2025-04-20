@@ -1,0 +1,21 @@
+FROM golang:1.23.6
+
+RUN go install github.com/githubnemo/CompileDaemon@latest
+
+RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+WORKDIR /home/go/app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+WORKDIR /home/go/build
+
+COPY entrypoint-local.sh .
+COPY .env .
+
+RUN chmod +x entrypoint-local.sh
+
+ENTRYPOINT ["./entrypoint-local.sh"]
