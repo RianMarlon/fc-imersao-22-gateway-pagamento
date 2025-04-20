@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 export async function getInvoice(id: string) {
   const cookieStore = await cookies();
   const apiKey = cookieStore.get("apiKey")?.value;
-  const response = await fetch(`http://host.docker.internal:8080/invoices/${id}`, {
+  const response = await fetch(`http://go-gateway-api:8080/invoices/${id}`, {
     headers: {
       "X-API-KEY": apiKey as string,
     },
