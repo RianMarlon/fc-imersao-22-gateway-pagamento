@@ -3,13 +3,13 @@ services:
     build:
       context: .
       # dockerfile: Dockerfile.prod
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile.prod
     ports:
       - 3001:3000
     volumes:
       - .:/home/node/app
     networks:
-      - go-gateway-api_default
+      - gateway_pagamento_network
     depends_on:
       nestjs-anti-fraud-db:
         condition: service_healthy
@@ -22,7 +22,7 @@ services:
     ports:
       - 5433:5432
     networks:
-      - go-gateway-api_default
+      - gateway_pagamento_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
       interval: 5s
@@ -35,5 +35,5 @@ volumes:
   postgres_data_nestjs_anti_fraud:
 
 networks:
-  go-gateway-api_default:
+  gateway_pagamento_network:
     external: true

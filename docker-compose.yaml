@@ -130,4 +130,5 @@ volumes:
 
 networks:
   gateway_pagamento_network:
+    name: gateway_pagamento_network
     driver: bridge
