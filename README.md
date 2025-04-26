@@ -27,7 +27,7 @@ Para rodar todos os serviços, basta você rodar o seguinte comando na raiz do p
 docker compose up
 ```
 
-### Componentes do Sistema
+## Componentes do Sistema
 
 - **Frontend (Next.js)**
   - Interface do usuário para gerenciamento de contas e processamento de pagamentos
